@@ -15,6 +15,7 @@ type Config struct {
 	Upstream struct {
 		DoHEndpoint string        `yaml:"doh_endpoint"`
 		Timeout     time.Duration `yaml:"timeout"`
+		Bootstrap   []string      `yaml:"bootstrap"`
 	} `yaml:"upstream"`
 	Rules struct {
 		Blocklist []string `yaml:"blocklist"`
@@ -32,6 +33,7 @@ func Defaults() Config {
 	cfg.Listen = "127.0.0.1:53"
 	cfg.Upstream.DoHEndpoint = "https://1.1.1.1/dns-query"
 	cfg.Upstream.Timeout = 5 * time.Second
+	cfg.Upstream.Bootstrap = defaultBootstrapServers()
 	cfg.Log.Level = "info"
 	return cfg
 }
@@ -58,6 +60,9 @@ func Load(path string) (Config, error) {
 	if cfg.Upstream.Timeout == 0 {
 		cfg.Upstream.Timeout = 5 * time.Second
 	}
+	if len(cfg.Upstream.Bootstrap) == 0 {
+		cfg.Upstream.Bootstrap = defaultBootstrapServers()
+	}
 	return cfg, nil
 }
 
@@ -73,4 +78,8 @@ func Write(path string, cfg Config) error {
 	}
 
 	return os.WriteFile(path, b, 0o644)
+}
+
+func defaultBootstrapServers() []string {
+	return []string{"1.1.1.1:53", "8.8.8.8:53"}
 }

@@ -38,12 +38,12 @@ type Stats struct {
 
 // Daemon runs the DNS server and forwards requests to DoH.
 type Daemon struct {
-	cfg     config.Config
-	rules   rules.RuleSet
-	logger  *logging.Logger
-	doh     *doh.Client
-	mu      sync.RWMutex
-	stats   Stats
+	cfg    config.Config
+	rules  rules.RuleSet
+	logger *logging.Logger
+	doh    *doh.Client
+	mu     sync.RWMutex
+	stats  Stats
 }
 
 // New returns a configured Daemon.
@@ -53,10 +53,10 @@ func New(cfg config.Config, logger *logging.Logger) *Daemon {
 		Allowlist: cfg.Rules.Allowlist,
 	}
 	return &Daemon{
-		cfg:     cfg,
-		rules:   r,
-		logger:  logger,
-		doh:     doh.New(cfg.Upstream.DoHEndpoint, cfg.Upstream.Timeout),
+		cfg:    cfg,
+		rules:  r,
+		logger: logger,
+		doh:    doh.New(cfg.Upstream.DoHEndpoint, cfg.Upstream.Timeout, cfg.Upstream.Bootstrap),
 	}
 }
 
@@ -69,7 +69,7 @@ func (d *Daemon) Reload(cfg config.Config) {
 		Blocklist: cfg.Rules.Blocklist,
 		Allowlist: cfg.Rules.Allowlist,
 	}
-	d.doh = doh.New(cfg.Upstream.DoHEndpoint, cfg.Upstream.Timeout)
+	d.doh = doh.New(cfg.Upstream.DoHEndpoint, cfg.Upstream.Timeout, cfg.Upstream.Bootstrap)
 	d.logger.Printf("configuration reloaded")
 }
 
@@ -137,10 +137,12 @@ func (d *Daemon) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	ctx, cancel := context.WithTimeout(context.Background(), cfg.Upstream.Timeout)
 	defer cancel()
 
-	resp, err := upstream.Query(ctx, r)
+	resp, err := queryWithRetry(ctx, 3, time.Second, func(ctx context.Context) (*dns.Msg, error) {
+		return upstream.Query(ctx, r)
+	})
 	if err != nil {
 		ev.Err = err
-		d.logger.Printf("doh query failed for %s: %v", domain, err)
+		d.logger.Printf("doh query failed for %s after retries: %v", domain, err)
 		m := new(dns.Msg)
 		m.SetReply(r)
 		m.Rcode = dns.RcodeServerFailure
@@ -186,4 +188,29 @@ func (d *Daemon) recordEvent(ev QueryEvent) {
 	}
 
 	// Non-blocking send so DNS path isn't stalled by slow UI.
+}
+
+func queryWithRetry(ctx context.Context, attempts int, delay time.Duration, fn func(context.Context) (*dns.Msg, error)) (*dns.Msg, error) {
+	if attempts < 1 {
+		attempts = 1
+	}
+	var lastErr error
+	for i := 1; i <= attempts; i++ {
+		resp, err := fn(ctx)
+		if err == nil {
+			return resp, nil
+		}
+		lastErr = err
+
+		if i == attempts {
+			break
+		}
+
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case <-time.After(delay):
+		}
+	}
+	return nil, lastErr
 }

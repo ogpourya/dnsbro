@@ -34,6 +34,9 @@ listen: 127.0.0.1:53
 upstream:
   doh_endpoint: https://1.1.1.1/dns-query
   timeout: 5s
+  bootstrap:
+    - 1.1.1.1:53
+    - 8.8.8.8:53
 rules:
   blocklist: []
   allowlist: []

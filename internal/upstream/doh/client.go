@@ -19,14 +19,36 @@ type Client struct {
 }
 
 // New creates a DoH client with sane defaults.
-func New(endpoint string, timeout time.Duration) *Client {
+func New(endpoint string, timeout time.Duration, bootstrap []string) *Client {
 	if timeout == 0 {
 		timeout = 5 * time.Second
 	}
+
+	bootstrap = normalizeBootstrapServers(bootstrap)
+	resolver := &net.Resolver{
+		PreferGo: true,
+		Dial: func(ctx context.Context, network, _ string) (net.Conn, error) {
+			var lastErr error
+			for _, addr := range bootstrap {
+				d := net.Dialer{Timeout: timeout}
+				conn, err := d.DialContext(ctx, network, addr)
+				if err == nil {
+					return conn, nil
+				}
+				lastErr = err
+			}
+			if lastErr == nil {
+				lastErr = fmt.Errorf("no bootstrap DNS servers available")
+			}
+			return nil, lastErr
+		},
+	}
+
 	tr := &http.Transport{
 		DialContext: (&net.Dialer{
 			Timeout:   timeout,
 			KeepAlive: timeout,
+			Resolver:  resolver,
 		}).DialContext,
 		TLSHandshakeTimeout: timeout,
 	}
@@ -74,4 +96,23 @@ func (c *Client) Query(ctx context.Context, msg *dns.Msg) (*dns.Msg, error) {
 		return nil, fmt.Errorf("unpack doh response: %w", err)
 	}
 	return &out, nil
+}
+
+func normalizeBootstrapServers(servers []string) []string {
+	if len(servers) == 0 {
+		return []string{"1.1.1.1:53", "8.8.8.8:53"}
+	}
+
+	out := make([]string, 0, len(servers))
+	for _, s := range servers {
+		host, port, err := net.SplitHostPort(s)
+		if err != nil || port == "" {
+			s = net.JoinHostPort(s, "53")
+		} else {
+			s = net.JoinHostPort(host, port)
+		}
+		out = append(out, s)
+	}
+
+	return out
 }
