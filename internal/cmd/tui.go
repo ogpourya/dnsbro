@@ -3,8 +3,8 @@ package cmd
 import (
 	"fmt"
 
-	"dnsbro/internal/daemon"
-	appTUI "dnsbro/internal/tui"
+	"github.com/ogpourya/dnsbro/internal/daemon"
+	appTUI "github.com/ogpourya/dnsbro/internal/tui"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"

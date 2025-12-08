@@ -1,4 +1,4 @@
-module dnsbro
+module github.com/ogpourya/dnsbro
 
 go 1.21
 

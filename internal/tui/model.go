@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	"dnsbro/internal/daemon"
+	"github.com/ogpourya/dnsbro/internal/daemon"
 
 	"github.com/charmbracelet/bubbles/list"
 	tea "github.com/charmbracelet/bubbletea"

@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"dnsbro/internal/cmd"
+	"github.com/ogpourya/dnsbro/internal/cmd"
 )
 
 func main() {

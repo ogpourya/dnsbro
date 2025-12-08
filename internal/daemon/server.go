@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"dnsbro/internal/logging"
-	"dnsbro/internal/rules"
-	"dnsbro/internal/upstream/doh"
-	"dnsbro/pkg/config"
+	"github.com/ogpourya/dnsbro/internal/logging"
+	"github.com/ogpourya/dnsbro/internal/rules"
+	"github.com/ogpourya/dnsbro/internal/upstream/doh"
+	"github.com/ogpourya/dnsbro/pkg/config"
 
 	"github.com/miekg/dns"
 )

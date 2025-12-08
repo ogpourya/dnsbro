@@ -7,10 +7,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"dnsbro/internal/daemon"
-	"dnsbro/internal/logging"
-	appTUI "dnsbro/internal/tui"
-	"dnsbro/pkg/config"
+	"github.com/ogpourya/dnsbro/internal/daemon"
+	"github.com/ogpourya/dnsbro/internal/logging"
+	appTUI "github.com/ogpourya/dnsbro/internal/tui"
+	"github.com/ogpourya/dnsbro/pkg/config"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"

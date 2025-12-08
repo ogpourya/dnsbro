@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"dnsbro/internal/systemd"
-	"dnsbro/pkg/config"
+	"github.com/ogpourya/dnsbro/internal/systemd"
+	"github.com/ogpourya/dnsbro/pkg/config"
 
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v3"
