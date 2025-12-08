@@ -1,7 +1,7 @@
 FROM golang:1.21-bullseye AS builder
 WORKDIR /src
 COPY . .
-RUN go build -o /usr/local/bin/dnsbro ./cmd/dnsbro
+RUN go build -o /usr/local/bin/dnsbro .
 
 FROM debian:12-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates dnsutils && rm -rf /var/lib/apt/lists/*

@@ -11,7 +11,7 @@ Modern Go-based DNS daemon for Ubuntu with DoH forwarding, Bubble Tea TUI, and s
 
 ## Quickstart
 ```bash
-go run ./cmd/dnsbro serve --config ./configs/config.yaml
+go run . serve --config ./configs/config.yaml
 ```
 Press `Ctrl+C` to exit. Use `--no-tui` if running as a system service.
 
