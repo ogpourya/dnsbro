@@ -1,0 +1,13 @@
+listen: 127.0.0.1:53
+upstream:
+  doh_endpoint: https://1.1.1.1/dns-query
+  timeout: 5s
+rules:
+  blocklist:
+    - ads.example.com
+  allowlist: []
+log:
+  file: /var/log/dnsbro.log
+  level: info
+tui:
+  enabled: true
