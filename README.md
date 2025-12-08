@@ -15,6 +15,12 @@ go run ./cmd/dnsbro serve --config ./configs/config.yaml
 ```
 Press `Ctrl+C` to exit. Use `--no-tui` if running as a system service.
 
+## Installation
+```bash
+GOPROXY=direct go install github.com/ogpourya/dnsbro@latest
+```
+The binary lands in `$GOBIN` (default `$HOME/go/bin`); ensure it is on your `PATH`.
+
 ## Configuration
 Example file: `configs/config.yaml`
 ```yaml
