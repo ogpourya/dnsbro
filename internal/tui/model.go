@@ -30,7 +30,15 @@ func (i item) FilterValue() string { return i.Domain }
 type Model struct {
 	list   list.Model
 	events <-chan daemon.QueryEvent
-	stats  daemon.Stats
+	stats  Stats
+}
+
+// Stats mirrors daemon counters without embedding locks for the TUI.
+type Stats struct {
+	Queries  int
+	Blocked  int
+	Failures int
+	Last     daemon.QueryEvent
 }
 
 // NewModel constructs the UI model.
