@@ -9,6 +9,7 @@ DNS proxy for Ubuntu: listens on `127.0.0.1:53` (UDP/TCP), forwards over DoH, sh
 ```bash
 GOPROXY=direct go install github.com/ogpourya/dnsbro@latest
 ```
+> Note: when using `sudo`, make sure the `dnsbro` binary is on sudo’s secure PATH. On many distros `/usr/local/bin` is excluded; either add it to sudoers or move the binary from your Go bin dir so sudo can see it, e.g. `sudo mv $(go env GOPATH)/bin/dnsbro /usr/local/bin/dnsbro` (or `/usr/sbin/dnsbro`). The `install` command also copies the executable to `/usr/local/bin/dnsbro` for you.
 3) Drop a config (tweak as needed):  
 ```bash
 sudo mkdir -p /etc/dnsbro
@@ -18,7 +19,6 @@ dnsbro sample-config | sudo tee /etc/dnsbro/config.yaml >/dev/null
 ```bash
 sudo dnsbro serve --config /etc/dnsbro/config.yaml
 ```
-> Note: when using `sudo`, make sure the `dnsbro` binary is on sudo’s secure PATH. On many distros `/usr/local/bin` is excluded; either add it to sudoers or move the binary from your Go bin dir so sudo can see it, e.g. `sudo mv $(go env GOPATH)/bin/dnsbro /usr/local/bin/dnsbro` (or `/usr/sbin/dnsbro`). The `install` command also copies the executable to `/usr/local/bin/dnsbro` for you.
 5) Point a resolver at it:  
 ```bash
 dig @127.0.0.1 -p 53 example.com
