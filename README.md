@@ -1,6 +1,8 @@
 # dnsbro
 DNS proxy for Ubuntu: listens on `127.0.0.1:53` (UDP/TCP), forwards over DoH, ships with systemd helpers.
 
+> Note: dnsbro is intended to be installed and run as root so it can bind to port 53 and manage the systemd service. All setup commands below assume root (use `sudo`).
+
 ## Quick start (Ubuntu)
 1) Install Go 1.21+ and ensure `$GOBIN` is on your `PATH`.  
 2) Get dnsbro:  
