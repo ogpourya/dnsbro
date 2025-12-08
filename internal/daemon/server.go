@@ -70,7 +70,7 @@ func (d *Daemon) Reload(cfg config.Config) {
 		Allowlist: cfg.Rules.Allowlist,
 	}
 	d.doh = doh.New(cfg.Upstream.DoHEndpoint, cfg.Upstream.Timeout, cfg.Upstream.Bootstrap)
-	d.logger.Printf("configuration reloaded")
+	d.logger.Infof("configuration reloaded")
 }
 
 // Start launches UDP and TCP listeners. Caller should cancel the context to stop.
@@ -87,7 +87,7 @@ func (d *Daemon) Start(ctx context.Context) error {
 	go func() { errCh <- udpServer.ListenAndServe() }()
 	go func() { errCh <- tcpServer.ListenAndServe() }()
 
-	d.logger.Printf("dnsbro listening on %s (udp/tcp)", d.cfg.Listen)
+	d.logger.Infof("dnsbro listening on %s (udp/tcp)", d.cfg.Listen)
 
 	select {
 	case <-ctx.Done():
@@ -142,7 +142,7 @@ func (d *Daemon) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	})
 	if err != nil {
 		ev.Err = err
-		d.logger.Printf("doh query failed for %s after retries: %v", domain, err)
+		d.logger.Errorf("doh query failed for %s after retries: %v", domain, err)
 		m := new(dns.Msg)
 		m.SetReply(r)
 		m.Rcode = dns.RcodeServerFailure
@@ -180,11 +180,11 @@ func (d *Daemon) recordEvent(ev QueryEvent) {
 	d.stats.mu.Unlock()
 
 	if ev.Blocked {
-		d.logger.Printf("blocked %s from %s", ev.Domain, ev.Client)
+		d.logger.Infof("blocked %s from %s", ev.Domain, ev.Client)
 	} else if ev.Err != nil {
-		d.logger.Printf("error handling %s: %v", ev.Domain, ev.Err)
+		d.logger.Errorf("error handling %s: %v", ev.Domain, ev.Err)
 	} else {
-		d.logger.Printf("resolved %s via %s -> %v", ev.Domain, ev.Upstream, ev.ResponseIPs)
+		d.logger.Debugf("resolved %s via %s -> %v", ev.Domain, ev.Upstream, ev.ResponseIPs)
 	}
 
 	// Non-blocking send so DNS path isn't stalled by slow UI.

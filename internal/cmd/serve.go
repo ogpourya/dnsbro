@@ -47,10 +47,10 @@ var serveCmd = &cobra.Command{
 			cfg.Listen = listenOverride
 		}
 
-		logr, err := logging.New(cfg.Log.File, "dnsbro ")
+		logr, err := logging.New(cfg.Log.File, cfg.Log.Level, "dnsbro ")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warning: using stdout logging: %v\n", err)
-			logr, _ = logging.New("", "dnsbro ")
+			logr, _ = logging.New("", cfg.Log.Level, "dnsbro ")
 		}
 		defer logr.Close()
 
@@ -67,7 +67,7 @@ var serveCmd = &cobra.Command{
 			for range reloadCh {
 				newCfg, err := config.Load(configPath)
 				if err != nil {
-					logr.Printf("reload failed: %v", err)
+					logr.Warnf("reload failed: %v", err)
 					continue
 				}
 				if listenOverride != "" {

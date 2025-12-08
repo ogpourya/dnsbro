@@ -18,6 +18,7 @@ dnsbro sample-config | sudo tee /etc/dnsbro/config.yaml >/dev/null
 ```bash
 sudo dnsbro serve --config /etc/dnsbro/config.yaml
 ```
+> Note: when using `sudo`, make sure the `dnsbro` binary is on sudo’s secure PATH. On many distros `/usr/local/bin` is excluded; either add it to sudoers or move the binary there (the `install` command copies the executable to `/usr/local/bin/dnsbro` for you).
 5) Point a resolver at it:  
 ```bash
 dig @127.0.0.1 -p 53 example.com
