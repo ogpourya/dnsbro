@@ -59,6 +59,7 @@ Wants=network-online.target
 
 [Service]
 ExecStart=%s serve --config %s --no-tui
+ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 User=root
 AmbientCapabilities=CAP_NET_BIND_SERVICE

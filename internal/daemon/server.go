@@ -42,6 +42,7 @@ type Daemon struct {
 	rules   rules.RuleSet
 	logger  *logging.Logger
 	doh     *doh.Client
+	mu      sync.RWMutex
 	stats   Stats
 	updates chan QueryEvent
 }
@@ -63,6 +64,8 @@ func New(cfg config.Config, logger *logging.Logger, updates chan QueryEvent) *Da
 
 // Reload swaps the daemon configuration at runtime.
 func (d *Daemon) Reload(cfg config.Config) {
+	d.mu.Lock()
+	defer d.mu.Unlock()
 	d.cfg = cfg
 	d.rules = rules.RuleSet{
 		Blocklist: cfg.Rules.Blocklist,
@@ -105,6 +108,12 @@ func (d *Daemon) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		return
 	}
 
+	d.mu.RLock()
+	cfg := d.cfg
+	rs := d.rules
+	upstream := d.doh
+	d.mu.RUnlock()
+
 	question := r.Question[0]
 	domain := question.Name
 	clientIP, _, _ := net.SplitHostPort(w.RemoteAddr().String())
@@ -113,10 +122,10 @@ func (d *Daemon) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	ev := QueryEvent{
 		Domain:   domain,
 		Client:   clientIP,
-		Upstream: d.cfg.Upstream.DoHEndpoint,
+		Upstream: cfg.Upstream.DoHEndpoint,
 	}
 
-	if d.rules.ShouldBlock(domain) {
+	if rs.ShouldBlock(domain) {
 		m := new(dns.Msg)
 		m.SetReply(r)
 		m.Rcode = dns.RcodeNameError
@@ -127,10 +136,10 @@ func (d *Daemon) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), d.cfg.Upstream.Timeout)
+	ctx, cancel := context.WithTimeout(context.Background(), cfg.Upstream.Timeout)
 	defer cancel()
 
-	resp, err := d.doh.Query(ctx, r)
+	resp, err := upstream.Query(ctx, r)
 	if err != nil {
 		ev.Err = err
 		d.logger.Printf("doh query failed for %s: %v", domain, err)
