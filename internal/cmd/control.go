@@ -49,7 +49,10 @@ var statusCmd = &cobra.Command{
 
 		out, err := exec.Command("systemctl", "status", "dnsbro").CombinedOutput()
 		fmt.Print(string(out))
-		return err
+		if err != nil {
+			return fmt.Errorf("systemctl status dnsbro: %w", err)
+		}
+		return nil
 	},
 }
 

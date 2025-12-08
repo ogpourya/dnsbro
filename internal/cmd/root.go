@@ -17,8 +17,10 @@ func Execute() error {
 }
 
 var rootCmd = &cobra.Command{
-	Use:   "dnsbro",
-	Short: "dnsbro is a local DNS resolver with DoH forwarding",
+	Use:           "dnsbro",
+	Short:         "dnsbro is a local DNS resolver with DoH forwarding",
+	SilenceUsage:  true,
+	SilenceErrors: true,
 }
 
 func init() {

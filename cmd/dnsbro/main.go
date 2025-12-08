@@ -1,13 +1,15 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"os"
 
 	"github.com/ogpourya/dnsbro/internal/cmd"
 )
 
 func main() {
 	if err := cmd.Execute(); err != nil {
-		log.Fatalf("dnsbro: %v", err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
 	}
 }
