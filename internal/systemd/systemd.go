@@ -60,12 +60,34 @@ func Install(configPath string, listen string) error {
 }
 
 // Uninstall removes the service and binary and restores DNS if we have a backup.
+// It is intentionally best-effort and will not fail if the binary or unit are already gone.
 func Uninstall() error {
-	_ = exec.Command("systemctl", "stop", "dnsbro").Run()
-	_ = exec.Command("systemctl", "disable", "dnsbro").Run()
-	_ = restoreResolver()
-	_ = os.Remove(servicePath)
-	return os.Remove(binaryPath)
+	var errs []error
+
+	if err := exec.Command("systemctl", "stop", "dnsbro").Run(); err != nil {
+		errs = append(errs, fmt.Errorf("systemctl stop dnsbro: %w", err))
+	}
+	if err := exec.Command("systemctl", "disable", "dnsbro").Run(); err != nil {
+		errs = append(errs, fmt.Errorf("systemctl disable dnsbro: %w", err))
+	}
+	if err := exec.Command("systemctl", "reset-failed", "dnsbro").Run(); err != nil {
+		// harmless if unit never existed; only track non-zero exit
+		errs = append(errs, fmt.Errorf("systemctl reset-failed dnsbro: %w", err))
+	}
+
+	if err := restoreResolver(); err != nil {
+		errs = append(errs, fmt.Errorf("restore resolver: %w", err))
+	}
+	if err := os.Remove(servicePath); err != nil && !errors.Is(err, os.ErrNotExist) {
+		errs = append(errs, fmt.Errorf("remove service file: %w", err))
+	}
+	_ = exec.Command("systemctl", "daemon-reload").Run()
+
+	if err := os.Remove(binaryPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+		errs = append(errs, fmt.Errorf("remove binary: %w", err))
+	}
+
+	return errors.Join(errs...)
 }
 
 // Revert stops the service and restores DNS if we have a backup.
