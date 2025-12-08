@@ -44,6 +44,8 @@ var serveCmd = &cobra.Command{
 		}
 		defer logr.Close()
 
+		warnIfSystemResolverBypasses(logr, cfg.Listen)
+
 		events := make(chan daemon.QueryEvent, 64)
 		d := daemon.New(cfg, logr, events)
 

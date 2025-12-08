@@ -34,7 +34,12 @@ var installCmd = &cobra.Command{
 			}
 		}
 
-		if err := systemd.Install(configPath); err != nil {
+		cfg, err := config.Load(configPath)
+		if err != nil {
+			return fmt.Errorf("load config: %w", err)
+		}
+
+		if err := systemd.Install(configPath, cfg.Listen); err != nil {
 			return fmt.Errorf("install systemd service: %w", err)
 		}
 		fmt.Printf("dnsbro installed: service=%s binary=%s config=%s\n", systemd.ServicePath(), systemd.BinaryPath(), configPath)
@@ -49,7 +54,7 @@ var uninstallCmd = &cobra.Command{
 		if err := systemd.Uninstall(); err != nil {
 			return fmt.Errorf("uninstall: %w", err)
 		}
-		fmt.Println("dnsbro uninstalled")
+		fmt.Println("dnsbro uninstalled; restored /etc/resolv.conf if backup was present")
 		return nil
 	},
 }
@@ -61,7 +66,7 @@ var revertCmd = &cobra.Command{
 		if err := systemd.Revert(); err != nil {
 			return fmt.Errorf("revert: %w", err)
 		}
-		fmt.Println("dnsbro stopped; restore /etc/resolv.conf if needed")
+		fmt.Println("dnsbro stopped; /etc/resolv.conf restored if backup was present")
 		return nil
 	},
 }
