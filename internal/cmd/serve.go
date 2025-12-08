@@ -34,6 +34,10 @@ var serveCmd = &cobra.Command{
 		if err != nil {
 			if os.IsNotExist(err) {
 				cfg = config.Defaults()
+				if err := config.Write(configPath, cfg); err != nil {
+					return fmt.Errorf("write default config: %w", err)
+				}
+				fmt.Fprintf(os.Stdout, "created default config at %s\n", configPath)
 			} else {
 				return fmt.Errorf("load config: %w", err)
 			}

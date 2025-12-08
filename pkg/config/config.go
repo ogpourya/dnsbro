@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"os"
+	"path/filepath"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -58,4 +59,18 @@ func Load(path string) (Config, error) {
 		cfg.Upstream.Timeout = 5 * time.Second
 	}
 	return cfg, nil
+}
+
+// Write persists the config to the given path, creating parent directories when needed.
+func Write(path string, cfg Config) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+
+	b, err := yaml.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, b, 0o644)
 }
