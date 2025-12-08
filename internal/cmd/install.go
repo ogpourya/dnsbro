@@ -16,6 +16,10 @@ var installCmd = &cobra.Command{
 	Use:   "install",
 	Short: "Install dnsbro as a systemd service",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := requireRoot(); err != nil {
+			return err
+		}
+
 		if err := ensureConfigPath(); err != nil {
 			return err
 		}
@@ -51,6 +55,10 @@ var uninstallCmd = &cobra.Command{
 	Use:   "uninstall",
 	Short: "Remove the systemd service and binary",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := requireRoot(); err != nil {
+			return err
+		}
+
 		if err := systemd.Uninstall(); err != nil {
 			return fmt.Errorf("uninstall: %w", err)
 		}
@@ -63,6 +71,10 @@ var revertCmd = &cobra.Command{
 	Use:   "revert",
 	Short: "Stop dnsbro and revert DNS settings",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := requireRoot(); err != nil {
+			return err
+		}
+
 		if err := systemd.Revert(); err != nil {
 			return fmt.Errorf("revert: %w", err)
 		}

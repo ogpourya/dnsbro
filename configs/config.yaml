@@ -9,5 +9,3 @@ rules:
 log:
   file: /var/log/dnsbro.log
   level: info
-tui:
-  enabled: true

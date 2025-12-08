@@ -44,11 +44,10 @@ type Daemon struct {
 	doh     *doh.Client
 	mu      sync.RWMutex
 	stats   Stats
-	updates chan QueryEvent
 }
 
 // New returns a configured Daemon.
-func New(cfg config.Config, logger *logging.Logger, updates chan QueryEvent) *Daemon {
+func New(cfg config.Config, logger *logging.Logger) *Daemon {
 	r := rules.RuleSet{
 		Blocklist: cfg.Rules.Blocklist,
 		Allowlist: cfg.Rules.Allowlist,
@@ -58,7 +57,6 @@ func New(cfg config.Config, logger *logging.Logger, updates chan QueryEvent) *Da
 		rules:   r,
 		logger:  logger,
 		doh:     doh.New(cfg.Upstream.DoHEndpoint, cfg.Upstream.Timeout),
-		updates: updates,
 	}
 }
 
@@ -188,8 +186,4 @@ func (d *Daemon) recordEvent(ev QueryEvent) {
 	}
 
 	// Non-blocking send so DNS path isn't stalled by slow UI.
-	select {
-	case d.updates <- ev:
-	default:
-	}
 }

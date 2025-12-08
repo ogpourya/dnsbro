@@ -23,9 +23,6 @@ type Config struct {
 		File  string `yaml:"file"`
 		Level string `yaml:"level"`
 	} `yaml:"log"`
-	TUI struct {
-		Enabled bool `yaml:"enabled"`
-	} `yaml:"tui"`
 }
 
 // Defaults returns a Config populated with sensible defaults.
@@ -35,7 +32,6 @@ func Defaults() Config {
 	cfg.Upstream.DoHEndpoint = "https://1.1.1.1/dns-query"
 	cfg.Upstream.Timeout = 5 * time.Second
 	cfg.Log.Level = "info"
-	cfg.TUI.Enabled = true
 	return cfg
 }
 

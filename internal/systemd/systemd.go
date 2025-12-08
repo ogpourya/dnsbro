@@ -36,12 +36,26 @@ func Install(configPath string, listen string) error {
 		return fmt.Errorf("write service: %w", err)
 	}
 
+	if err := runSystemctl("daemon-reload"); err != nil {
+		return err
+	}
+	if err := runSystemctl("enable", "dnsbro"); err != nil {
+		return err
+	}
+	if err := runSystemctl("start", "dnsbro"); err != nil {
+		return err
+	}
+	if err := runSystemctl("is-active", "--quiet", "dnsbro"); err != nil {
+		_ = runSystemctl("disable", "dnsbro")
+		return fmt.Errorf("dnsbro service did not start cleanly: %w", err)
+	}
+
 	if err := ensureResolver(listen); err != nil {
+		_ = runSystemctl("stop", "dnsbro")
+		_ = runSystemctl("disable", "dnsbro")
 		return fmt.Errorf("configure resolver: %w", err)
 	}
 
-	_ = exec.Command("systemctl", "daemon-reload").Run()
-	_ = exec.Command("systemctl", "enable", "--now", "dnsbro").Run()
 	return nil
 }
 
@@ -70,7 +84,7 @@ After=network-online.target
 Wants=network-online.target
 
 [Service]
-ExecStart=%s serve --config %s --no-tui
+ExecStart=%s serve --config %s
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 User=root
@@ -79,6 +93,15 @@ AmbientCapabilities=CAP_NET_BIND_SERVICE
 [Install]
 WantedBy=multi-user.target
 `, binaryPath, configPath)
+}
+
+func runSystemctl(args ...string) error {
+	cmd := exec.Command("systemctl", args...)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("systemctl %s: %v: %s", strings.Join(args, " "), err, bytes.TrimSpace(out))
+	}
+	return nil
 }
 
 func copyFile(src, dst string) error {

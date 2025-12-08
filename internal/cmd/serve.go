@@ -9,21 +9,23 @@ import (
 
 	"github.com/ogpourya/dnsbro/internal/daemon"
 	"github.com/ogpourya/dnsbro/internal/logging"
-	appTUI "github.com/ogpourya/dnsbro/internal/tui"
 	"github.com/ogpourya/dnsbro/pkg/config"
 
-	tea "github.com/charmbracelet/bubbletea"
 	"github.com/spf13/cobra"
 )
 
 var (
-	noTUI bool
+	listenOverride string
 )
 
 var serveCmd = &cobra.Command{
 	Use:   "serve",
 	Short: "Start the dnsbro DNS daemon",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if err := requireRoot(); err != nil {
+			return err
+		}
+
 		if err := ensureConfigPath(); err != nil {
 			return err
 		}
@@ -37,6 +39,10 @@ var serveCmd = &cobra.Command{
 			}
 		}
 
+		if listenOverride != "" {
+			cfg.Listen = listenOverride
+		}
+
 		logr, err := logging.New(cfg.Log.File, "dnsbro ")
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "warning: using stdout logging: %v\n", err)
@@ -46,8 +52,7 @@ var serveCmd = &cobra.Command{
 
 		warnIfSystemResolverBypasses(logr, cfg.Listen)
 
-		events := make(chan daemon.QueryEvent, 64)
-		d := daemon.New(cfg, logr, events)
+		d := daemon.New(cfg, logr)
 
 		ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 		defer stop()
@@ -61,30 +66,17 @@ var serveCmd = &cobra.Command{
 					logr.Printf("reload failed: %v", err)
 					continue
 				}
+				if listenOverride != "" {
+					newCfg.Listen = listenOverride
+				}
 				d.Reload(newCfg)
 			}
 		}()
-
-		if !noTUI && cfg.TUI.Enabled {
-			prog := tea.NewProgram(appTUI.NewModel(events), tea.WithAltScreen())
-			go func() {
-				if err := prog.Start(); err != nil {
-					logr.Printf("tui exited: %v", err)
-				}
-				stop()
-			}()
-		} else {
-			// Drain events to avoid blocking when TUI disabled.
-			go func() {
-				for range events {
-				}
-			}()
-		}
 
 		return d.Start(ctx)
 	},
 }
 
 func init() {
-	serveCmd.Flags().BoolVar(&noTUI, "no-tui", false, "Disable TUI even if enabled in config")
+	serveCmd.Flags().StringVar(&listenOverride, "listen", "", "Override listen address (host:port) without editing the config file")
 }

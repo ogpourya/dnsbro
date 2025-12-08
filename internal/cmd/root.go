@@ -18,14 +18,14 @@ func Execute() error {
 
 var rootCmd = &cobra.Command{
 	Use:   "dnsbro",
-	Short: "dnsbro is a local DNS resolver with DoH forwarding and TUI",
+	Short: "dnsbro is a local DNS resolver with DoH forwarding",
 }
 
 func init() {
 	rootCmd.PersistentFlags().StringVar(&configPath, "config", "/etc/dnsbro/config.yaml", "Path to config file")
 	rootCmd.AddCommand(serveCmd)
-	rootCmd.AddCommand(tuiCmd)
 	rootCmd.AddCommand(installCmd)
+	rootCmd.AddCommand(sampleConfigCmd)
 	rootCmd.AddCommand(uninstallCmd)
 	rootCmd.AddCommand(startCmd)
 	rootCmd.AddCommand(stopCmd)

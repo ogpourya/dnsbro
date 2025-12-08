@@ -8,4 +8,4 @@ RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates
 COPY --from=builder /usr/local/bin/dnsbro /usr/local/bin/dnsbro
 COPY configs/config.yaml /etc/dnsbro/config.yaml
 EXPOSE 53/udp 53/tcp
-CMD ["dnsbro", "serve", "--config", "/etc/dnsbro/config.yaml", "--no-tui"]
+CMD ["dnsbro", "serve", "--config", "/etc/dnsbro/config.yaml"]
