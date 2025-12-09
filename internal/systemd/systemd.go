@@ -64,16 +64,10 @@ func Install(configPath string, listen string) error {
 func Uninstall() error {
 	var errs []error
 
-	if err := exec.Command("systemctl", "stop", "dnsbro").Run(); err != nil {
-		errs = append(errs, fmt.Errorf("systemctl stop dnsbro: %w", err))
-	}
-	if err := exec.Command("systemctl", "disable", "dnsbro").Run(); err != nil {
-		errs = append(errs, fmt.Errorf("systemctl disable dnsbro: %w", err))
-	}
-	if err := exec.Command("systemctl", "reset-failed", "dnsbro").Run(); err != nil {
-		// harmless if unit never existed; only track non-zero exit
-		errs = append(errs, fmt.Errorf("systemctl reset-failed dnsbro: %w", err))
-	}
+	// Ignore failures when the unit is missing or already stopped.
+	_ = exec.Command("systemctl", "stop", "dnsbro").Run()
+	_ = exec.Command("systemctl", "disable", "dnsbro").Run()
+	_ = exec.Command("systemctl", "reset-failed", "dnsbro").Run()
 
 	if err := restoreResolver(); err != nil {
 		errs = append(errs, fmt.Errorf("restore resolver: %w", err))
